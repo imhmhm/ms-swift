@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from transformers.utils import strtobool
 from typing import List, Literal, Optional
 
-from swift.utils import get_logger
+from swift.utils import TRAINABLE_PARAMETER_PRESETS, get_logger
 
 logger = get_logger()
 
@@ -25,6 +25,10 @@ class TunerArguments:
             Defaults to an empty list `[]`.
         trainable_parameters_regex (Optional[str]): A regular expression to match the names of parameters that should
             be made explicitly trainable. Defaults to `None`.
+        trainable_parameters_preset (Optional[str]): A named preset expanded into `trainable_parameters_regex` when
+            that argument is not set. Common MoE router finetuning groups: `router_only` (all `mlp.gate` router
+            weights) and `router_and_norm` (router plus every norm weight: input/post-attention/final layernorm and
+            QK-norm). Useful together with `freeze_parameters_regex='.*'`. Defaults to `None`.
             Note on parameter freezing priority: The `trainable_*` arguments have higher priority than the `freeze_*`
             arguments. The freezing logic is applied as follows:
             Firstly, all parameters are set to trainable.
@@ -118,6 +122,7 @@ class TunerArguments:
     freeze_parameters_ratio: float = 0.  # 0 ~ 1
     trainable_parameters: List[str] = field(default_factory=list)
     trainable_parameters_regex: Optional[str] = None
+    trainable_parameters_preset: Optional[str] = None
     # lora or full
     freeze_llm: bool = False
     freeze_vit: bool = True
@@ -197,9 +202,24 @@ class TunerArguments:
     def __post_init__(self):
         if isinstance(self.init_weights, str) and self.init_weights.lower() in {'true', 'false'}:
             self.init_weights = bool(strtobool(self.init_weights))
+        self._init_trainable_preset()
         self._init_multimodal_full()
         if self.target_regex:
             self.target_modules = self.target_regex
+
+    def _init_trainable_preset(self):
+        if self.trainable_parameters_preset is None:
+            return
+        if self.trainable_parameters_regex is not None:
+            logger.warning(
+                f'trainable_parameters_regex is set, ignoring trainable_parameters_preset: '
+                f'{self.trainable_parameters_preset}')
+            return
+        pats = TRAINABLE_PARAMETER_PRESETS.get(self.trainable_parameters_preset)
+        if pats is None:
+            raise ValueError(f'Unknown trainable_parameters_preset: {self.trainable_parameters_preset}. '
+                             f'Choose from {list(TRAINABLE_PARAMETER_PRESETS)}')
+        self.trainable_parameters_regex = '|'.join(pats)
 
     def _init_multimodal_full(self):
         model_arch = self.model_meta.model_arch

@@ -67,6 +67,27 @@ def show_layers(model: nn.Module, max_lines: Optional[int] = 20) -> None:
         logger.info(f'[{n}]: requires_grad={p.requires_grad}, dtype={p.dtype}, device={p.device}')
 
 
+# Common trainable-parameter presets for MoE router finetuning, expanded into a single
+# alternation regex consumed by activate_parameters (re.search semantics).
+# Patterns are suffix-anchored on purpose: layer-norm names carry underscore prefixes
+# (`input_layernorm`, `post_attention_layernorm`) so only `\.norm\.weight$` (the final
+# norm) and the explicit q/k_norm entries match; this avoids the class of bug where
+# `\.layernorm\.weight$` silently drops every per-layer norm.
+TRAINABLE_PARAMETER_PRESETS = {
+    'router_only': [
+        r'.*\.mlp\.gate\.weight$',
+    ],
+    'router_and_norm': [
+        r'.*\.mlp\.gate\.weight$',
+        r'.*\.input_layernorm\.weight$',
+        r'.*\.post_attention_layernorm\.weight$',
+        r'.*\.norm\.weight$',
+        r'.*\.q_norm\.weight$',
+        r'.*\.k_norm\.weight$',
+    ],
+}
+
+
 def freeze_parameters(model: nn.Module,
                       freeze_parameters_ratio: float,
                       freeze_parameters: List[str],

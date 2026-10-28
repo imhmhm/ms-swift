@@ -76,11 +76,11 @@ else:
             'time_synchronize', 'to_device', 'to_float_dtype', 'nanstd', 'get_physical_device_count', 'is_torch_rocm'
         ],
         'transformers_utils': [
-            'activate_parameters', 'disable_deepspeed_zero3', 'find_all_linears', 'find_embedding', 'find_layers',
-            'find_norm', 'find_sub_module', 'freeze_parameters', 'get_cu_seqlens_from_position_ids',
-            'get_model_parameter_info', 'get_modules_to_not_convert', 'get_multimodal_target_regex',
-            'get_n_params_grads', 'get_packed_seq_params', 'get_position_ids_from_cu_seqlens', 'seed_worker',
-            'show_layers', 'unwrap_model_for_generation'
+            'TRAINABLE_PARAMETER_PRESETS', 'activate_parameters', 'disable_deepspeed_zero3', 'find_all_linears',
+            'find_embedding', 'find_layers', 'find_norm', 'find_sub_module', 'freeze_parameters',
+            'get_cu_seqlens_from_position_ids', 'get_model_parameter_info', 'get_modules_to_not_convert',
+            'get_multimodal_target_regex', 'get_n_params_grads', 'get_packed_seq_params',
+            'get_position_ids_from_cu_seqlens', 'seed_worker', 'show_layers', 'unwrap_model_for_generation'
         ],
         'url_utils': ['SafeUrlFetcher'],
         'utils': [
