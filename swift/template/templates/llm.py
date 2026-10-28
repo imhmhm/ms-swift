@@ -611,11 +611,16 @@ register_template(
 register_template(
     TemplateMeta(
         LLMTemplateType.olmoe,
-        prefix=['|||IP_ADDRESS|||'],
-        system_prefix=['|||IP_ADDRESS|||<|system|>\n{{SYSTEM}}\n'],
+        # Aligned with the official OLMoE-1B-7B-0125-Instruct chat_template jinja:
+        # no `|||IP_ADDRESS|||` turn separators (that token is a pretraining corpus
+        # placeholder, not part of the 0125 chat format), non-final assistant turns
+        # end with eos then a plain newline, the final one with eos, and the sequence
+        # starts with bos_token (None for the 0125 tokenizer, i.e. empty prefix).
+        prefix=[],
+        system_prefix=['<|system|>\n{{SYSTEM}}\n'],
         prompt=['<|user|>\n{{QUERY}}\n<|assistant|>\n'],
-        chat_sep=['|||IP_ADDRESS|||\n'],
-        suffix=['|||IP_ADDRESS|||'],
+        chat_sep=['<|endoftext|>\n'],
+        suffix=['<|endoftext|>'],
         stop_words=['<|endoftext|>'],
     ))
 
